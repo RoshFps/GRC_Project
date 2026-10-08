@@ -1,0 +1,1780 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Risk Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #F5F2EB; --ink: #1F2124; --muted: #6E695F; --rule: #D6CFC0; --alert: #8B1E2D; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink);
+         font: 15px/1.55 'IBM Plex Sans', system-ui, sans-serif; }
+  main { max-width: 1120px; margin: 0 auto; padding: 48px 32px 64px; }
+  .kicker { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+            display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  h1 { font: 600 44px/1.1 'Source Serif 4', Georgia, serif; margin: 18px 0 14px; letter-spacing: -.01em; }
+  .lede { font: 400 19px/1.5 'Source Serif 4', Georgia, serif; max-width: 760px; margin: 0; color: #3a3833; }
+  .masthead { border-bottom: 3px double var(--ink); padding-bottom: 28px; }
+  .figures { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 1px solid var(--rule); }
+  .figure { padding: 22px 18px 20px; border-left: 1px solid var(--rule); }
+  .figure:first-child { border-left: 0; padding-left: 0; }
+  .value { font: 500 40px/1 'IBM Plex Mono', monospace; letter-spacing: -.03em; }
+  .value.alert { color: var(--alert); }
+  .arrow { color: var(--muted); font-size: 24px; margin: 0 6px; vertical-align: 6px; }
+  .label { font-weight: 600; font-size: 13px; margin-top: 10px; }
+  .note { font-size: 12px; color: var(--muted); }
+  section { margin-top: 52px; }
+  h2 { font: 600 24px/1.2 'Source Serif 4', Georgia, serif; margin: 0 0 4px; }
+  h2 .num { font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: var(--muted); font-weight: 400;
+             margin-right: 10px; vertical-align: 3px; }
+  .intro { color: var(--muted); margin: 0 0 18px; max-width: 720px; font-size: 14px; }
+  .chart { overflow-x: auto; }
+  svg { width: 100%; min-width: 720px; height: auto; display: block; }
+  svg g[id^="tip-"] { cursor: help; }
+  svg g[id^="tip-"]:hover path { stroke: var(--ink); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: left; font-weight: 600; font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+        color: var(--muted); border-bottom: 1px solid var(--ink); padding: 8px 10px 8px 0; }
+  td { border-bottom: 1px solid var(--rule); padding: 10px 10px 10px 0; vertical-align: top; }
+  td.id { font-family: 'IBM Plex Mono', monospace; font-weight: 500; white-space: nowrap; }
+  td.num { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; white-space: nowrap; }
+  td.late { color: var(--alert); font-weight: 500; }
+  .sub { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .chip { font-family: 'IBM Plex Mono', monospace; font-size: 12px; white-space: nowrap; }
+  .chip::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 2px;
+                   background: var(--c); margin-right: 6px; }
+  details summary { cursor: pointer; font-weight: 600; font-size: 14px; margin-bottom: 12px; }
+  .table-wrap { overflow-x: auto; }
+  footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 12px;
+            color: var(--muted); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  @media (max-width: 760px) {
+    main { padding: 28px 16px 48px; }
+    h1 { font-size: 32px; }
+    .lede { font-size: 17px; }
+    .figures { grid-template-columns: repeat(2, 1fr); }
+    .figure, .figure:first-child { border-left: 0; padding-left: 0; border-bottom: 1px solid var(--rule); }
+    .value { font-size: 32px; }
+  }
+  @media print { main { padding: 0; } section { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<main>
+  <header class="masthead">
+    <div class="kicker"><span>Information security risk report · Saarland University</span>
+      <span>ISO/IEC 27001:2022</span></div>
+    <h1>Risk position on 8 October 2026</h1>
+    <p class="lede">18 risks on the register, 17 still open. 4 remediations are past due. Planned treatment brings 13 high or critical risks down to 0 and cuts the total score by 55%.</p>
+  </header>
+
+  <div class="figures"><div class="figure"><div class="value">18</div><div class="label">Risks on the register</div><div class="note">10 categories</div></div><div class="figure"><div class="value">17</div><div class="label">Open risks</div><div class="note">not closed or accepted</div></div><div class="figure"><div class="value" class="alert">4</div><div class="label">Overdue remediations</div><div class="note">past their due date</div></div><div class="figure"><div class="value">13<span class="arrow">→</span>0</div><div class="label">High or critical</div><div class="note">inherent → residual</div></div><div class="figure"><div class="value">55%</div><div class="label">Score reduction</div><div class="note">if all treatment lands</div></div></div>
+
+  <section>
+    <h2><span class="num">01</span>Where the risks sit</h2>
+    <p class="intro">Each risk placed by likelihood and impact, before and after the treatment the owners
+      have planned. Hover a cell to see the risk titles.</p>
+    <div class="chart"><svg xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 892.8 439.2" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-08T17:36:43.903556</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 439.2 
+L 892.8 439.2 
+L 892.8 0 
+L 0 0 
+z
+" style="fill: #f5f2eb"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 127.790667 377.712 
+L 444.014667 377.712 
+L 444.014667 61.488 
+L 127.790667 61.488 
+z
+" style="fill: #f5f2eb"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 127.790667 377.712 
+L 191.035467 377.712 
+L 191.035467 314.4672 
+L 127.790667 314.4672 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #cfd3b0; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 191.035467 377.712 
+L 254.280267 377.712 
+L 254.280267 314.4672 
+L 191.035467 314.4672 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #cfd3b0; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 254.280267 377.712 
+L 317.525067 377.712 
+L 317.525067 314.4672 
+L 254.280267 314.4672 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #cfd3b0; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 317.525067 377.712 
+L 380.769867 377.712 
+L 380.769867 314.4672 
+L 317.525067 314.4672 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #cfd3b0; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 380.769867 377.712 
+L 444.014667 377.712 
+L 444.014667 314.4672 
+L 380.769867 314.4672 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #e8b04f; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 127.790667 314.4672 
+L 191.035467 314.4672 
+L 191.035467 251.2224 
+L 127.790667 251.2224 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #cfd3b0; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 191.035467 314.4672 
+L 254.280267 314.4672 
+L 254.280267 251.2224 
+L 191.035467 251.2224 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #cfd3b0; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 254.280267 314.4672 
+L 317.525067 314.4672 
+L 317.525067 251.2224 
+L 254.280267 251.2224 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #e8b04f; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="tip-0"><title>R05  Outage of a critical IT or network supplier
+R07  Campus management system failure during enrolment or exam registration</title>
+    <path d="M 317.525067 314.4672 
+L 380.769867 314.4672 
+L 380.769867 251.2224 
+L 317.525067 251.2224 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #e8b04f; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="tip-1"><title>R08  Misuse of privileged administrator accounts
+R12  Fire, water or power failure in the data centre</title>
+    <path d="M 380.769867 314.4672 
+L 444.014667 314.4672 
+L 444.014667 251.2224 
+L 380.769867 251.2224 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #cb6234; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_11">
+    <path d="M 127.790667 251.2224 
+L 191.035467 251.2224 
+L 191.035467 187.9776 
+L 127.790667 187.9776 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #cfd3b0; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_12">
+    <path d="M 191.035467 251.2224 
+L 254.280267 251.2224 
+L 254.280267 187.9776 
+L 191.035467 187.9776 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #e8b04f; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="tip-2"><title>R13  Denial-of-service attack on website and network
+R14  Insecure software developed in-house
+R17  Loss of key IT staff and knowledge</title>
+    <path d="M 254.280267 251.2224 
+L 317.525067 251.2224 
+L 317.525067 187.9776 
+L 254.280267 187.9776 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #e8b04f; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="tip-3"><title>R10  Personal data exposed through misconfigured file sharing
+R11  Espionage targeting research and knowledge transfer
+R16  Insecure lab equipment and building systems on the campus network</title>
+    <path d="M 317.525067 251.2224 
+L 380.769867 251.2224 
+L 380.769867 187.9776 
+L 317.525067 187.9776 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #cb6234; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="tip-4"><title>R03  Leak of sensitive research data</title>
+    <path d="M 380.769867 251.2224 
+L 444.014667 251.2224 
+L 444.014667 187.9776 
+L 380.769867 187.9776 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #8b1e2d; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_13">
+    <path d="M 127.790667 187.9776 
+L 191.035467 187.9776 
+L 191.035467 124.7328 
+L 127.790667 124.7328 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #cfd3b0; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_14">
+    <path d="M 191.035467 187.9776 
+L 254.280267 187.9776 
+L 254.280267 124.7328 
+L 191.035467 124.7328 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #e8b04f; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="tip-5"><title>R04  Loss or theft of laptops and mobile devices
+R09  Accounts not removed after people leave
+R18  Confidential data entered into public AI tools</title>
+    <path d="M 254.280267 187.9776 
+L 317.525067 187.9776 
+L 317.525067 124.7328 
+L 254.280267 124.7328 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #cb6234; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="tip-6"><title>R06  Unpatched servers run by institutes (shadow IT)
+R15  Attacks detected too late</title>
+    <path d="M 317.525067 187.9776 
+L 380.769867 187.9776 
+L 380.769867 124.7328 
+L 317.525067 124.7328 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #8b1e2d; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="tip-7"><title>R01  Ransomware on central IT infrastructure</title>
+    <path d="M 380.769867 187.9776 
+L 444.014667 187.9776 
+L 444.014667 124.7328 
+L 380.769867 124.7328 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #8b1e2d; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_15">
+    <path d="M 127.790667 124.7328 
+L 191.035467 124.7328 
+L 191.035467 61.488 
+L 127.790667 61.488 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #e8b04f; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_16">
+    <path d="M 191.035467 124.7328 
+L 254.280267 124.7328 
+L 254.280267 61.488 
+L 191.035467 61.488 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #cb6234; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="tip-8"><title>R02  Phishing and theft of staff or student credentials</title>
+    <path d="M 254.280267 124.7328 
+L 317.525067 124.7328 
+L 317.525067 61.488 
+L 254.280267 61.488 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #8b1e2d; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_17">
+    <path d="M 317.525067 124.7328 
+L 380.769867 124.7328 
+L 380.769867 61.488 
+L 317.525067 61.488 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #8b1e2d; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_18">
+    <path d="M 380.769867 124.7328 
+L 444.014667 124.7328 
+L 444.014667 61.488 
+L 380.769867 61.488 
+z
+" clip-path="url(#pb89b47967f)" style="fill: #8b1e2d; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1"/>
+     <g id="text_1">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(156.863067 392.4245)">1</text>
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(140.351153 403.4745)">Negligible</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_2"/>
+     <g id="text_2">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(220.107867 392.4245)">2</text>
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(211.790484 403.4745)">Minor</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_3"/>
+     <g id="text_3">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(283.352667 392.4245)">3</text>
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(267.652901 403.4745)">Moderate</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_4"/>
+     <g id="text_4">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(346.597467 392.4245)">4</text>
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(338.424185 403.4745)">Major</text>
+     </g>
+    </g>
+    <g id="xtick_5">
+     <g id="line2d_5"/>
+     <g id="text_5">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(409.842267 392.4245)">5</text>
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(399.360704 403.4745)">Severe</text>
+     </g>
+    </g>
+    <g id="text_6">
+     <text style="font-size: 9px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #6e695f" x="285.902667" y="423.037" transform="rotate(-0 285.902667 423.037)">Impact</text>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_6"/>
+     <g id="text_7">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #6e695f" x="121.790667" y="350.44585" transform="rotate(-0 121.790667 350.44585)">Rare  1</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_7"/>
+     <g id="text_8">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #6e695f" x="121.790667" y="287.20105" transform="rotate(-0 121.790667 287.20105)">Unlikely  2</text>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_8"/>
+     <g id="text_9">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #6e695f" x="121.790667" y="223.95625" transform="rotate(-0 121.790667 223.95625)">Possible  3</text>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_9"/>
+     <g id="text_10">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #6e695f" x="121.790667" y="160.71145" transform="rotate(-0 121.790667 160.71145)">Likely  4</text>
+     </g>
+    </g>
+    <g id="ytick_5">
+     <g id="line2d_10"/>
+     <g id="text_11">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #6e695f" x="121.790667" y="97.46665" transform="rotate(-0 121.790667 97.46665)">Almost certain  5</text>
+     </g>
+    </g>
+    <g id="text_12">
+     <text style="font-size: 9px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #6e695f" x="46.674495" y="219.6" transform="rotate(-90 46.674495 219.6)">Likelihood</text>
+    </g>
+   </g>
+   <g id="text_13">
+    <text style="font-size: 8.2px; font-family: 'IBM Plex Mono', 'DejaVu Sans Mono'; text-anchor: middle; fill: #1f2124" x="349.147467" y="285.706472" transform="rotate(-0 349.147467 285.706472)">R05 R07</text>
+   </g>
+   <g id="text_14">
+    <text style="font-size: 8.2px; font-family: 'IBM Plex Mono', 'DejaVu Sans Mono'; text-anchor: middle; fill: #ffffff" x="412.392267" y="285.706472" transform="rotate(-0 412.392267 285.706472)">R08 R12</text>
+   </g>
+   <g id="text_15">
+    <text style="font-size: 8.2px; font-family: 'IBM Plex Mono', 'DejaVu Sans Mono'; text-anchor: middle; fill: #1f2124" x="285.902667" y="222.461672" transform="rotate(-0 285.902667 222.461672)">R13 R14 R17</text>
+   </g>
+   <g id="text_16">
+    <text style="font-size: 8.2px; font-family: 'IBM Plex Mono', 'DejaVu Sans Mono'; text-anchor: middle; fill: #ffffff" x="349.147467" y="222.461672" transform="rotate(-0 349.147467 222.461672)">R10 R11 R16</text>
+   </g>
+   <g id="text_17">
+    <text style="font-size: 8.2px; font-family: 'IBM Plex Mono', 'DejaVu Sans Mono'; text-anchor: middle; fill: #ffffff" x="412.392267" y="222.461672" transform="rotate(-0 412.392267 222.461672)">R03</text>
+   </g>
+   <g id="text_18">
+    <text style="font-size: 8.2px; font-family: 'IBM Plex Mono', 'DejaVu Sans Mono'; text-anchor: middle; fill: #ffffff" x="285.902667" y="159.216872" transform="rotate(-0 285.902667 159.216872)">R04 R09 R18</text>
+   </g>
+   <g id="text_19">
+    <text style="font-size: 8.2px; font-family: 'IBM Plex Mono', 'DejaVu Sans Mono'; text-anchor: middle; fill: #ffffff" x="349.147467" y="159.216872" transform="rotate(-0 349.147467 159.216872)">R06 R15</text>
+   </g>
+   <g id="text_20">
+    <text style="font-size: 8.2px; font-family: 'IBM Plex Mono', 'DejaVu Sans Mono'; text-anchor: middle; fill: #ffffff" x="412.392267" y="159.216872" transform="rotate(-0 412.392267 159.216872)">R01</text>
+   </g>
+   <g id="text_21">
+    <text style="font-size: 8.2px; font-family: 'IBM Plex Mono', 'DejaVu Sans Mono'; text-anchor: middle; fill: #ffffff" x="285.902667" y="95.972072" transform="rotate(-0 285.902667 95.972072)">R02</text>
+   </g>
+   <g id="text_22">
+    <text style="font-size: 13px; font-family: 'Source Serif 4', 'DejaVu Serif'; text-anchor: start; fill: #1f2124" x="127.790667" y="49.488" transform="rotate(-0 127.790667 49.488)">Before treatment</text>
+   </g>
+  </g>
+  <g id="axes_2">
+   <g id="patch_19">
+    <path d="M 542.529333 377.712 
+L 858.753333 377.712 
+L 858.753333 61.488 
+L 542.529333 61.488 
+z
+" style="fill: #f5f2eb"/>
+   </g>
+   <g id="patch_20">
+    <path d="M 542.529333 377.712 
+L 605.774133 377.712 
+L 605.774133 314.4672 
+L 542.529333 314.4672 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #cfd3b0; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_21">
+    <path d="M 605.774133 377.712 
+L 669.018933 377.712 
+L 669.018933 314.4672 
+L 605.774133 314.4672 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #cfd3b0; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="tip-9"><title>R07  Campus management system failure during enrolment or exam registration</title>
+    <path d="M 669.018933 377.712 
+L 732.263733 377.712 
+L 732.263733 314.4672 
+L 669.018933 314.4672 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #cfd3b0; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="tip-10"><title>R08  Misuse of privileged administrator accounts
+R12  Fire, water or power failure in the data centre</title>
+    <path d="M 732.263733 377.712 
+L 795.508533 377.712 
+L 795.508533 314.4672 
+L 732.263733 314.4672 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #cfd3b0; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_22">
+    <path d="M 795.508533 377.712 
+L 858.753333 377.712 
+L 858.753333 314.4672 
+L 795.508533 314.4672 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #e8b04f; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_23">
+    <path d="M 542.529333 314.4672 
+L 605.774133 314.4672 
+L 605.774133 251.2224 
+L 542.529333 251.2224 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #cfd3b0; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="tip-11"><title>R04  Loss or theft of laptops and mobile devices
+R09  Accounts not removed after people leave
+R14  Insecure software developed in-house
+R17  Loss of key IT staff and knowledge
+R18  Confidential data entered into public AI tools</title>
+    <path d="M 605.774133 314.4672 
+L 669.018933 314.4672 
+L 669.018933 251.2224 
+L 605.774133 251.2224 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #cfd3b0; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="tip-12"><title>R05  Outage of a critical IT or network supplier
+R06  Unpatched servers run by institutes (shadow IT)
+R10  Personal data exposed through misconfigured file sharing
+R11  Espionage targeting research and knowledge transfer
+R15  Attacks detected too late
+R16  Insecure lab equipment and building systems on the campus network</title>
+    <path d="M 669.018933 314.4672 
+L 732.263733 314.4672 
+L 732.263733 251.2224 
+L 669.018933 251.2224 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #e8b04f; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="tip-13"><title>R01  Ransomware on central IT infrastructure
+R03  Leak of sensitive research data</title>
+    <path d="M 732.263733 314.4672 
+L 795.508533 314.4672 
+L 795.508533 251.2224 
+L 732.263733 251.2224 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #e8b04f; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_24">
+    <path d="M 795.508533 314.4672 
+L 858.753333 314.4672 
+L 858.753333 251.2224 
+L 795.508533 251.2224 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #cb6234; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_25">
+    <path d="M 542.529333 251.2224 
+L 605.774133 251.2224 
+L 605.774133 187.9776 
+L 542.529333 187.9776 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #cfd3b0; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="tip-14"><title>R02  Phishing and theft of staff or student credentials</title>
+    <path d="M 605.774133 251.2224 
+L 669.018933 251.2224 
+L 669.018933 187.9776 
+L 605.774133 187.9776 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #e8b04f; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="tip-15"><title>R13  Denial-of-service attack on website and network</title>
+    <path d="M 669.018933 251.2224 
+L 732.263733 251.2224 
+L 732.263733 187.9776 
+L 669.018933 187.9776 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #e8b04f; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_26">
+    <path d="M 732.263733 251.2224 
+L 795.508533 251.2224 
+L 795.508533 187.9776 
+L 732.263733 187.9776 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #cb6234; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_27">
+    <path d="M 795.508533 251.2224 
+L 858.753333 251.2224 
+L 858.753333 187.9776 
+L 795.508533 187.9776 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #8b1e2d; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_28">
+    <path d="M 542.529333 187.9776 
+L 605.774133 187.9776 
+L 605.774133 124.7328 
+L 542.529333 124.7328 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #cfd3b0; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_29">
+    <path d="M 605.774133 187.9776 
+L 669.018933 187.9776 
+L 669.018933 124.7328 
+L 605.774133 124.7328 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #e8b04f; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_30">
+    <path d="M 669.018933 187.9776 
+L 732.263733 187.9776 
+L 732.263733 124.7328 
+L 669.018933 124.7328 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #cb6234; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_31">
+    <path d="M 732.263733 187.9776 
+L 795.508533 187.9776 
+L 795.508533 124.7328 
+L 732.263733 124.7328 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #8b1e2d; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_32">
+    <path d="M 795.508533 187.9776 
+L 858.753333 187.9776 
+L 858.753333 124.7328 
+L 795.508533 124.7328 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #8b1e2d; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_33">
+    <path d="M 542.529333 124.7328 
+L 605.774133 124.7328 
+L 605.774133 61.488 
+L 542.529333 61.488 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #e8b04f; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_34">
+    <path d="M 605.774133 124.7328 
+L 669.018933 124.7328 
+L 669.018933 61.488 
+L 605.774133 61.488 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #cb6234; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_35">
+    <path d="M 669.018933 124.7328 
+L 732.263733 124.7328 
+L 732.263733 61.488 
+L 669.018933 61.488 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #8b1e2d; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_36">
+    <path d="M 732.263733 124.7328 
+L 795.508533 124.7328 
+L 795.508533 61.488 
+L 732.263733 61.488 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #8b1e2d; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_37">
+    <path d="M 795.508533 124.7328 
+L 858.753333 124.7328 
+L 858.753333 61.488 
+L 795.508533 61.488 
+z
+" clip-path="url(#p3bd82808e9)" style="fill: #8b1e2d; opacity: 0.17; stroke: #f5f2eb; stroke-width: 3; stroke-linejoin: miter"/>
+   </g>
+   <g id="matplotlib.axis_3">
+    <g id="xtick_6">
+     <g id="line2d_11"/>
+     <g id="text_23">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(571.601733 392.4245)">1</text>
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(555.089819 403.4745)">Negligible</text>
+     </g>
+    </g>
+    <g id="xtick_7">
+     <g id="line2d_12"/>
+     <g id="text_24">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(634.846533 392.4245)">2</text>
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(626.529151 403.4745)">Minor</text>
+     </g>
+    </g>
+    <g id="xtick_8">
+     <g id="line2d_13"/>
+     <g id="text_25">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(698.091333 392.4245)">3</text>
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(682.391568 403.4745)">Moderate</text>
+     </g>
+    </g>
+    <g id="xtick_9">
+     <g id="line2d_14"/>
+     <g id="text_26">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(761.336133 392.4245)">4</text>
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(753.162852 403.4745)">Major</text>
+     </g>
+    </g>
+    <g id="xtick_10">
+     <g id="line2d_15"/>
+     <g id="text_27">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(824.580933 392.4245)">5</text>
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; fill: #6e695f" transform="translate(814.099371 403.4745)">Severe</text>
+     </g>
+    </g>
+    <g id="text_28">
+     <text style="font-size: 9px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #6e695f" x="700.641333" y="423.037" transform="rotate(-0 700.641333 423.037)">Impact</text>
+    </g>
+   </g>
+   <g id="matplotlib.axis_4">
+    <g id="ytick_6">
+     <g id="line2d_16"/>
+    </g>
+    <g id="ytick_7">
+     <g id="line2d_17"/>
+    </g>
+    <g id="ytick_8">
+     <g id="line2d_18"/>
+    </g>
+    <g id="ytick_9">
+     <g id="line2d_19"/>
+    </g>
+    <g id="ytick_10">
+     <g id="line2d_20"/>
+    </g>
+   </g>
+   <g id="text_29">
+    <text style="font-size: 8.2px; font-family: 'IBM Plex Mono', 'DejaVu Sans Mono'; text-anchor: middle; fill: #1f2124" x="700.641333" y="348.951272" transform="rotate(-0 700.641333 348.951272)">R07</text>
+   </g>
+   <g id="text_30">
+    <text style="font-size: 8.2px; font-family: 'IBM Plex Mono', 'DejaVu Sans Mono'; text-anchor: middle; fill: #1f2124" x="763.886133" y="348.951272" transform="rotate(-0 763.886133 348.951272)">R08 R12</text>
+   </g>
+   <g id="text_31">
+    <text style="font-size: 8.2px; font-family: 'IBM Plex Mono', 'DejaVu Sans Mono'; fill: #1f2124" transform="translate(610.336533 277.711472)">R04 R09 R14</text>
+    <text style="font-size: 8.2px; font-family: 'IBM Plex Mono', 'DejaVu Sans Mono'; fill: #1f2124" transform="translate(620.176533 293.701472)">R17 R18</text>
+   </g>
+   <g id="text_32">
+    <text style="font-size: 8.2px; font-family: 'IBM Plex Mono', 'DejaVu Sans Mono'; fill: #1f2124" transform="translate(673.581333 277.711472)">R05 R06 R10</text>
+    <text style="font-size: 8.2px; font-family: 'IBM Plex Mono', 'DejaVu Sans Mono'; fill: #1f2124" transform="translate(673.581333 293.652144)">R11 R15 R16</text>
+   </g>
+   <g id="text_33">
+    <text style="font-size: 8.2px; font-family: 'IBM Plex Mono', 'DejaVu Sans Mono'; text-anchor: middle; fill: #1f2124" x="763.886133" y="285.706472" transform="rotate(-0 763.886133 285.706472)">R01 R03</text>
+   </g>
+   <g id="text_34">
+    <text style="font-size: 8.2px; font-family: 'IBM Plex Mono', 'DejaVu Sans Mono'; text-anchor: middle; fill: #1f2124" x="637.396533" y="222.461672" transform="rotate(-0 637.396533 222.461672)">R02</text>
+   </g>
+   <g id="text_35">
+    <text style="font-size: 8.2px; font-family: 'IBM Plex Mono', 'DejaVu Sans Mono'; text-anchor: middle; fill: #1f2124" x="700.641333" y="222.461672" transform="rotate(-0 700.641333 222.461672)">R13</text>
+   </g>
+   <g id="text_36">
+    <text style="font-size: 13px; font-family: 'Source Serif 4', 'DejaVu Serif'; text-anchor: start; fill: #1f2124" x="542.529333" y="49.488" transform="rotate(-0 542.529333 49.488)">After planned treatment</text>
+   </g>
+  </g>
+  <g id="legend_1">
+   <g id="patch_38">
+    <path d="M 114.786 24.1405 
+L 124.136 24.1405 
+L 124.136 15.9805 
+L 114.786 15.9805 
+z
+" style="fill: #cfd3b0"/>
+   </g>
+   <g id="text_37">
+    <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: start; fill: #1f2124" x="130.936" y="22.9505" transform="rotate(-0 130.936 22.9505)">Low  1–4</text>
+   </g>
+   <g id="patch_39">
+    <path d="M 180.862875 24.1405 
+L 190.212875 24.1405 
+L 190.212875 15.9805 
+L 180.862875 15.9805 
+z
+" style="fill: #e8b04f"/>
+   </g>
+   <g id="text_38">
+    <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: start; fill: #1f2124" x="197.012875" y="22.9505" transform="rotate(-0 197.012875 22.9505)">Medium  5–9</text>
+   </g>
+   <g id="patch_40">
+    <path d="M 262.393813 24.1405 
+L 271.743813 24.1405 
+L 271.743813 15.9805 
+L 262.393813 15.9805 
+z
+" style="fill: #cb6234"/>
+   </g>
+   <g id="text_39">
+    <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: start; fill: #1f2124" x="278.543813" y="22.9505" transform="rotate(-0 278.543813 22.9505)">High  10–14</text>
+   </g>
+   <g id="patch_41">
+    <path d="M 340.702719 24.1405 
+L 350.052719 24.1405 
+L 350.052719 15.9805 
+L 340.702719 15.9805 
+z
+" style="fill: #8b1e2d"/>
+   </g>
+   <g id="text_40">
+    <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: start; fill: #1f2124" x="356.852719" y="22.9505" transform="rotate(-0 356.852719 22.9505)">Critical  15–25</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pb89b47967f">
+   <rect x="127.790667" y="61.488" width="316.224" height="316.224"/>
+  </clipPath>
+  <clipPath id="p3bd82808e9">
+   <rect x="542.529333" y="61.488" width="316.224" height="316.224"/>
+  </clipPath>
+ </defs>
+</svg>
+</div>
+  </section>
+
+  <section>
+    <h2><span class="num">02</span>What treatment buys</h2>
+    <p class="intro">Inherent score against residual score for every risk. Anything right of the dashed line
+      sits above the risk appetite and needs a treatment plan or a signed acceptance.</p>
+    <div class="chart"><svg xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 892.8 560.16" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-08T17:36:44.351757</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 560.16 
+L 892.8 560.16 
+L 892.8 0 
+L 0 0 
+z
+" style="fill: #f5f2eb"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 321.408 515.3472 
+L 870.48 515.3472 
+L 870.48 39.2112 
+L 321.408 39.2112 
+z
+" style="fill: #f5f2eb"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 332.174118 515.3472 
+L 418.303059 515.3472 
+L 418.303059 39.2112 
+L 332.174118 39.2112 
+z
+" clip-path="url(#p4f5f8ce1df)" style="fill: #cfd3b0; opacity: 0.14"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 418.303059 515.3472 
+L 525.964235 515.3472 
+L 525.964235 39.2112 
+L 418.303059 39.2112 
+z
+" clip-path="url(#p4f5f8ce1df)" style="fill: #e8b04f; opacity: 0.14"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 525.964235 515.3472 
+L 633.625412 515.3472 
+L 633.625412 39.2112 
+L 525.964235 39.2112 
+z
+" clip-path="url(#p4f5f8ce1df)" style="fill: #cb6234; opacity: 0.14"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 633.625412 515.3472 
+L 859.713882 515.3472 
+L 859.713882 39.2112 
+L 633.625412 39.2112 
+z
+" clip-path="url(#p4f5f8ce1df)" style="fill: #8b1e2d; opacity: 0.14"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1"/>
+     <g id="text_1">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #6e695f" x="342.940235" y="527.5597" transform="rotate(-0 342.940235 527.5597)">1</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_2"/>
+     <g id="text_2">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #6e695f" x="429.069176" y="527.5597" transform="rotate(-0 429.069176 527.5597)">5</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_3"/>
+     <g id="text_3">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #6e695f" x="536.730353" y="527.5597" transform="rotate(-0 536.730353 527.5597)">10</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_4"/>
+     <g id="text_4">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #6e695f" x="644.391529" y="527.5597" transform="rotate(-0 644.391529 527.5597)">15</text>
+     </g>
+    </g>
+    <g id="xtick_5">
+     <g id="line2d_5"/>
+     <g id="text_5">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #6e695f" x="752.052706" y="527.5597" transform="rotate(-0 752.052706 527.5597)">20</text>
+     </g>
+    </g>
+    <g id="xtick_6">
+     <g id="line2d_6"/>
+     <g id="text_6">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #6e695f" x="859.713882" y="527.5597" transform="rotate(-0 859.713882 527.5597)">25</text>
+     </g>
+    </g>
+    <g id="text_7">
+     <text style="font-size: 9px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #6e695f" x="595.944" y="543.1222" transform="rotate(-0 595.944 543.1222)">Score (likelihood × impact)</text>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_7"/>
+     <g id="text_8">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="317.908" y="73.95911" transform="rotate(-0 317.908 73.95911)">R01   Ransomware on central IT infrastructure</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_8"/>
+     <g id="text_9">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="317.908" y="99.285493" transform="rotate(-0 317.908 99.285493)">R06   Unpatched servers run by institutes (shadow IT)</text>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_9"/>
+     <g id="text_10">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="317.908" y="124.611876" transform="rotate(-0 317.908 124.611876)">R15   Attacks detected too late</text>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_10"/>
+     <g id="text_11">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="317.908" y="149.938259" transform="rotate(-0 317.908 149.938259)">R02   Phishing and theft of staff or student credentials</text>
+     </g>
+    </g>
+    <g id="ytick_5">
+     <g id="line2d_11"/>
+     <g id="text_12">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="317.908" y="175.264641" transform="rotate(-0 317.908 175.264641)">R03   Leak of sensitive research data</text>
+     </g>
+    </g>
+    <g id="ytick_6">
+     <g id="line2d_12"/>
+     <g id="text_13">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="317.908" y="200.591024" transform="rotate(-0 317.908 200.591024)">R04   Loss or theft of laptops and mobile devices</text>
+     </g>
+    </g>
+    <g id="ytick_7">
+     <g id="line2d_13"/>
+     <g id="text_14">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="317.908" y="225.917407" transform="rotate(-0 317.908 225.917407)">R09   Accounts not removed after people leave</text>
+     </g>
+    </g>
+    <g id="ytick_8">
+     <g id="line2d_14"/>
+     <g id="text_15">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="317.908" y="251.24379" transform="rotate(-0 317.908 251.24379)">R18   Confidential data entered into public AI tools</text>
+     </g>
+    </g>
+    <g id="ytick_9">
+     <g id="line2d_15"/>
+     <g id="text_16">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="317.908" y="276.570173" transform="rotate(-0 317.908 276.570173)">R10   Personal data exposed through misconfigured file sh…</text>
+     </g>
+    </g>
+    <g id="ytick_10">
+     <g id="line2d_16"/>
+     <g id="text_17">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="317.908" y="301.896556" transform="rotate(-0 317.908 301.896556)">R11   Espionage targeting research and knowledge transfer</text>
+     </g>
+    </g>
+    <g id="ytick_11">
+     <g id="line2d_17"/>
+     <g id="text_18">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="317.908" y="327.222939" transform="rotate(-0 317.908 327.222939)">R16   Insecure lab equipment and building systems on the…</text>
+     </g>
+    </g>
+    <g id="ytick_12">
+     <g id="line2d_18"/>
+     <g id="text_19">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="317.908" y="352.549322" transform="rotate(-0 317.908 352.549322)">R08   Misuse of privileged administrator accounts</text>
+     </g>
+    </g>
+    <g id="ytick_13">
+     <g id="line2d_19"/>
+     <g id="text_20">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="317.908" y="377.875705" transform="rotate(-0 317.908 377.875705)">R12   Fire, water or power failure in the data centre</text>
+     </g>
+    </g>
+    <g id="ytick_14">
+     <g id="line2d_20"/>
+     <g id="text_21">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="317.908" y="403.202088" transform="rotate(-0 317.908 403.202088)">R14   Insecure software developed in-house</text>
+     </g>
+    </g>
+    <g id="ytick_15">
+     <g id="line2d_21"/>
+     <g id="text_22">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="317.908" y="428.528471" transform="rotate(-0 317.908 428.528471)">R17   Loss of key IT staff and knowledge</text>
+     </g>
+    </g>
+    <g id="ytick_16">
+     <g id="line2d_22"/>
+     <g id="text_23">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="317.908" y="453.854854" transform="rotate(-0 317.908 453.854854)">R13   Denial-of-service attack on website and network</text>
+     </g>
+    </g>
+    <g id="ytick_17">
+     <g id="line2d_23"/>
+     <g id="text_24">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="317.908" y="479.181237" transform="rotate(-0 317.908 479.181237)">R07   Campus management system failure during enrolment o…</text>
+     </g>
+    </g>
+    <g id="ytick_18">
+     <g id="line2d_24"/>
+     <g id="text_25">
+      <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="317.908" y="504.50762" transform="rotate(-0 317.908 504.50762)">R05   Outage of a critical IT or network supplier</text>
+     </g>
+    </g>
+   </g>
+   <g id="line2d_25">
+    <path d="M 525.964235 515.3472 
+L 525.964235 39.2112 
+" clip-path="url(#p4f5f8ce1df)" style="fill: none; stroke-dasharray: 3,3; stroke-dashoffset: 0; stroke: #1f2124"/>
+   </g>
+   <g id="line2d_26">
+    <path d="M 493.665882 69.60286 
+L 752.052706 69.60286 
+" clip-path="url(#p4f5f8ce1df)" style="fill: none; stroke: #6e695f; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_27">
+    <path d="M 450.601412 94.929243 
+L 665.923765 94.929243 
+" clip-path="url(#p4f5f8ce1df)" style="fill: none; stroke: #6e695f; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_28">
+    <path d="M 450.601412 120.255626 
+L 665.923765 120.255626 
+" clip-path="url(#p4f5f8ce1df)" style="fill: none; stroke: #6e695f; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_29">
+    <path d="M 450.601412 145.582009 
+L 644.391529 145.582009 
+" clip-path="url(#p4f5f8ce1df)" style="fill: none; stroke: #6e695f; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_30">
+    <path d="M 493.665882 170.908391 
+L 644.391529 170.908391 
+" clip-path="url(#p4f5f8ce1df)" style="fill: none; stroke: #6e695f; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_31">
+    <path d="M 407.536941 196.234774 
+L 579.794824 196.234774 
+" clip-path="url(#p4f5f8ce1df)" style="fill: none; stroke: #6e695f; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_32">
+    <path d="M 407.536941 221.561157 
+L 579.794824 221.561157 
+" clip-path="url(#p4f5f8ce1df)" style="fill: none; stroke: #6e695f; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_33">
+    <path d="M 407.536941 246.88754 
+L 579.794824 246.88754 
+" clip-path="url(#p4f5f8ce1df)" style="fill: none; stroke: #6e695f; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_34">
+    <path d="M 450.601412 272.213923 
+L 579.794824 272.213923 
+" clip-path="url(#p4f5f8ce1df)" style="fill: none; stroke: #6e695f; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_35">
+    <path d="M 450.601412 297.540306 
+L 579.794824 297.540306 
+" clip-path="url(#p4f5f8ce1df)" style="fill: none; stroke: #6e695f; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_36">
+    <path d="M 450.601412 322.866689 
+L 579.794824 322.866689 
+" clip-path="url(#p4f5f8ce1df)" style="fill: none; stroke: #6e695f; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_37">
+    <path d="M 407.536941 348.193072 
+L 536.730353 348.193072 
+" clip-path="url(#p4f5f8ce1df)" style="fill: none; stroke: #6e695f; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_38">
+    <path d="M 407.536941 373.519455 
+L 536.730353 373.519455 
+" clip-path="url(#p4f5f8ce1df)" style="fill: none; stroke: #6e695f; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_39">
+    <path d="M 407.536941 398.845838 
+L 515.198118 398.845838 
+" clip-path="url(#p4f5f8ce1df)" style="fill: none; stroke: #6e695f; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_40">
+    <path d="M 407.536941 424.172221 
+L 515.198118 424.172221 
+" clip-path="url(#p4f5f8ce1df)" style="fill: none; stroke: #6e695f; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_41">
+    <path d="M 515.198118 449.498604 
+L 515.198118 449.498604 
+" clip-path="url(#p4f5f8ce1df)" style="fill: none; stroke: #6e695f; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_42">
+    <path d="M 386.004706 474.824987 
+L 493.665882 474.824987 
+" clip-path="url(#p4f5f8ce1df)" style="fill: none; stroke: #6e695f; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_43">
+    <path d="M 450.601412 500.15137 
+L 493.665882 500.15137 
+" clip-path="url(#p4f5f8ce1df)" style="fill: none; stroke: #6e695f; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="text_26">
+    <text style="font-weight: 500; font-size: 7.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #6e695f" x="375.238588" y="42.213977" transform="rotate(-0 375.238588 42.213977)">LOW</text>
+   </g>
+   <g id="text_27">
+    <text style="font-weight: 500; font-size: 7.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #6e695f" x="472.133647" y="42.213977" transform="rotate(-0 472.133647 42.213977)">MEDIUM</text>
+   </g>
+   <g id="text_28">
+    <text style="font-weight: 500; font-size: 7.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #6e695f" x="579.794824" y="42.213977" transform="rotate(-0 579.794824 42.213977)">HIGH</text>
+   </g>
+   <g id="text_29">
+    <text style="font-weight: 500; font-size: 7.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #6e695f" x="746.669647" y="42.213977" transform="rotate(-0 746.669647 42.213977)">CRITICAL</text>
+   </g>
+   <g id="text_30">
+    <text style="font-style: italic; font-size: 8px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: start; fill: #1f2124" x="531.347294" y="56.900502" transform="rotate(-0 531.347294 56.900502)">risk appetite</text>
+   </g>
+   <g id="PathCollection_1">
+    <defs>
+     <path id="m2d13a912dd" d="M 0 4.1833 
+C 1.109424 4.1833 2.173559 3.742521 2.95804 2.95804 
+C 3.742521 2.173559 4.1833 1.109424 4.1833 0 
+C 4.1833 -1.109424 3.742521 -2.173559 2.95804 -2.95804 
+C 2.173559 -3.742521 1.109424 -4.1833 0 -4.1833 
+C -1.109424 -4.1833 -2.173559 -3.742521 -2.95804 -2.95804 
+C -3.742521 -2.173559 -4.1833 -1.109424 -4.1833 0 
+C -4.1833 1.109424 -3.742521 2.173559 -2.95804 2.95804 
+C -2.173559 3.742521 -1.109424 4.1833 0 4.1833 
+z
+" style="stroke: #8b1e2d; stroke-width: 2"/>
+    </defs>
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m2d13a912dd" x="752.052706" y="69.60286" style="fill: #f5f2eb; stroke: #8b1e2d; stroke-width: 2"/>
+    </g>
+   </g>
+   <g id="PathCollection_2">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m2d13a912dd" x="665.923765" y="94.929243" style="fill: #f5f2eb; stroke: #8b1e2d; stroke-width: 2"/>
+    </g>
+   </g>
+   <g id="PathCollection_3">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m2d13a912dd" x="665.923765" y="120.255626" style="fill: #f5f2eb; stroke: #8b1e2d; stroke-width: 2"/>
+    </g>
+   </g>
+   <g id="PathCollection_4">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m2d13a912dd" x="644.391529" y="145.582009" style="fill: #f5f2eb; stroke: #8b1e2d; stroke-width: 2"/>
+    </g>
+   </g>
+   <g id="PathCollection_5">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m2d13a912dd" x="644.391529" y="170.908391" style="fill: #f5f2eb; stroke: #8b1e2d; stroke-width: 2"/>
+    </g>
+   </g>
+   <g id="PathCollection_6">
+    <defs>
+     <path id="m975263703d" d="M 0 4.1833 
+C 1.109424 4.1833 2.173559 3.742521 2.95804 2.95804 
+C 3.742521 2.173559 4.1833 1.109424 4.1833 0 
+C 4.1833 -1.109424 3.742521 -2.173559 2.95804 -2.95804 
+C 2.173559 -3.742521 1.109424 -4.1833 0 -4.1833 
+C -1.109424 -4.1833 -2.173559 -3.742521 -2.95804 -2.95804 
+C -3.742521 -2.173559 -4.1833 -1.109424 -4.1833 0 
+C -4.1833 1.109424 -3.742521 2.173559 -2.95804 2.95804 
+C -2.173559 3.742521 -1.109424 4.1833 0 4.1833 
+z
+" style="stroke: #cb6234; stroke-width: 2"/>
+    </defs>
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m975263703d" x="579.794824" y="196.234774" style="fill: #f5f2eb; stroke: #cb6234; stroke-width: 2"/>
+    </g>
+   </g>
+   <g id="PathCollection_7">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m975263703d" x="579.794824" y="221.561157" style="fill: #f5f2eb; stroke: #cb6234; stroke-width: 2"/>
+    </g>
+   </g>
+   <g id="PathCollection_8">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m975263703d" x="579.794824" y="246.88754" style="fill: #f5f2eb; stroke: #cb6234; stroke-width: 2"/>
+    </g>
+   </g>
+   <g id="PathCollection_9">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m975263703d" x="579.794824" y="272.213923" style="fill: #f5f2eb; stroke: #cb6234; stroke-width: 2"/>
+    </g>
+   </g>
+   <g id="PathCollection_10">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m975263703d" x="579.794824" y="297.540306" style="fill: #f5f2eb; stroke: #cb6234; stroke-width: 2"/>
+    </g>
+   </g>
+   <g id="PathCollection_11">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m975263703d" x="579.794824" y="322.866689" style="fill: #f5f2eb; stroke: #cb6234; stroke-width: 2"/>
+    </g>
+   </g>
+   <g id="PathCollection_12">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m975263703d" x="536.730353" y="348.193072" style="fill: #f5f2eb; stroke: #cb6234; stroke-width: 2"/>
+    </g>
+   </g>
+   <g id="PathCollection_13">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m975263703d" x="536.730353" y="373.519455" style="fill: #f5f2eb; stroke: #cb6234; stroke-width: 2"/>
+    </g>
+   </g>
+   <g id="PathCollection_14">
+    <defs>
+     <path id="m9d7d3b3097" d="M 0 4.1833 
+C 1.109424 4.1833 2.173559 3.742521 2.95804 2.95804 
+C 3.742521 2.173559 4.1833 1.109424 4.1833 0 
+C 4.1833 -1.109424 3.742521 -2.173559 2.95804 -2.95804 
+C 2.173559 -3.742521 1.109424 -4.1833 0 -4.1833 
+C -1.109424 -4.1833 -2.173559 -3.742521 -2.95804 -2.95804 
+C -3.742521 -2.173559 -4.1833 -1.109424 -4.1833 0 
+C -4.1833 1.109424 -3.742521 2.173559 -2.95804 2.95804 
+C -2.173559 3.742521 -1.109424 4.1833 0 4.1833 
+z
+" style="stroke: #e8b04f; stroke-width: 2"/>
+    </defs>
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m9d7d3b3097" x="515.198118" y="398.845838" style="fill: #f5f2eb; stroke: #e8b04f; stroke-width: 2"/>
+    </g>
+   </g>
+   <g id="PathCollection_15">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m9d7d3b3097" x="515.198118" y="424.172221" style="fill: #f5f2eb; stroke: #e8b04f; stroke-width: 2"/>
+    </g>
+   </g>
+   <g id="PathCollection_16">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m9d7d3b3097" x="515.198118" y="449.498604" style="fill: #f5f2eb; stroke: #e8b04f; stroke-width: 2"/>
+    </g>
+   </g>
+   <g id="PathCollection_17">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m9d7d3b3097" x="493.665882" y="474.824987" style="fill: #f5f2eb; stroke: #e8b04f; stroke-width: 2"/>
+    </g>
+   </g>
+   <g id="PathCollection_18">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m9d7d3b3097" x="493.665882" y="500.15137" style="fill: #f5f2eb; stroke: #e8b04f; stroke-width: 2"/>
+    </g>
+   </g>
+   <g id="PathCollection_19">
+    <defs>
+     <path id="m863d3987d4" d="M 0 4.1833 
+C 1.109424 4.1833 2.173559 3.742521 2.95804 2.95804 
+C 3.742521 2.173559 4.1833 1.109424 4.1833 0 
+C 4.1833 -1.109424 3.742521 -2.173559 2.95804 -2.95804 
+C 2.173559 -3.742521 1.109424 -4.1833 0 -4.1833 
+C -1.109424 -4.1833 -2.173559 -3.742521 -2.95804 -2.95804 
+C -3.742521 -2.173559 -4.1833 -1.109424 -4.1833 0 
+C -4.1833 1.109424 -3.742521 2.173559 -2.95804 2.95804 
+C -2.173559 3.742521 -1.109424 4.1833 0 4.1833 
+z
+" style="stroke: #6e695f; stroke-width: 0.8"/>
+    </defs>
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m863d3987d4" x="493.665882" y="69.60286" style="fill: #e8b04f; stroke: #6e695f; stroke-width: 0.8"/>
+    </g>
+   </g>
+   <g id="PathCollection_20">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m863d3987d4" x="450.601412" y="94.929243" style="fill: #e8b04f; stroke: #6e695f; stroke-width: 0.8"/>
+    </g>
+   </g>
+   <g id="PathCollection_21">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m863d3987d4" x="450.601412" y="120.255626" style="fill: #e8b04f; stroke: #6e695f; stroke-width: 0.8"/>
+    </g>
+   </g>
+   <g id="PathCollection_22">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m863d3987d4" x="450.601412" y="145.582009" style="fill: #e8b04f; stroke: #6e695f; stroke-width: 0.8"/>
+    </g>
+   </g>
+   <g id="PathCollection_23">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m863d3987d4" x="493.665882" y="170.908391" style="fill: #e8b04f; stroke: #6e695f; stroke-width: 0.8"/>
+    </g>
+   </g>
+   <g id="PathCollection_24">
+    <defs>
+     <path id="m3989d16452" d="M 0 4.1833 
+C 1.109424 4.1833 2.173559 3.742521 2.95804 2.95804 
+C 3.742521 2.173559 4.1833 1.109424 4.1833 0 
+C 4.1833 -1.109424 3.742521 -2.173559 2.95804 -2.95804 
+C 2.173559 -3.742521 1.109424 -4.1833 0 -4.1833 
+C -1.109424 -4.1833 -2.173559 -3.742521 -2.95804 -2.95804 
+C -3.742521 -2.173559 -4.1833 -1.109424 -4.1833 0 
+C -4.1833 1.109424 -3.742521 2.173559 -2.95804 2.95804 
+C -2.173559 3.742521 -1.109424 4.1833 0 4.1833 
+z
+" style="stroke: #6e695f; stroke-width: 0.8"/>
+    </defs>
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m3989d16452" x="407.536941" y="196.234774" style="fill: #cfd3b0; stroke: #6e695f; stroke-width: 0.8"/>
+    </g>
+   </g>
+   <g id="PathCollection_25">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m3989d16452" x="407.536941" y="221.561157" style="fill: #cfd3b0; stroke: #6e695f; stroke-width: 0.8"/>
+    </g>
+   </g>
+   <g id="PathCollection_26">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m3989d16452" x="407.536941" y="246.88754" style="fill: #cfd3b0; stroke: #6e695f; stroke-width: 0.8"/>
+    </g>
+   </g>
+   <g id="PathCollection_27">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m863d3987d4" x="450.601412" y="272.213923" style="fill: #e8b04f; stroke: #6e695f; stroke-width: 0.8"/>
+    </g>
+   </g>
+   <g id="PathCollection_28">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m863d3987d4" x="450.601412" y="297.540306" style="fill: #e8b04f; stroke: #6e695f; stroke-width: 0.8"/>
+    </g>
+   </g>
+   <g id="PathCollection_29">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m863d3987d4" x="450.601412" y="322.866689" style="fill: #e8b04f; stroke: #6e695f; stroke-width: 0.8"/>
+    </g>
+   </g>
+   <g id="PathCollection_30">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m3989d16452" x="407.536941" y="348.193072" style="fill: #cfd3b0; stroke: #6e695f; stroke-width: 0.8"/>
+    </g>
+   </g>
+   <g id="PathCollection_31">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m3989d16452" x="407.536941" y="373.519455" style="fill: #cfd3b0; stroke: #6e695f; stroke-width: 0.8"/>
+    </g>
+   </g>
+   <g id="PathCollection_32">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m3989d16452" x="407.536941" y="398.845838" style="fill: #cfd3b0; stroke: #6e695f; stroke-width: 0.8"/>
+    </g>
+   </g>
+   <g id="PathCollection_33">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m3989d16452" x="407.536941" y="424.172221" style="fill: #cfd3b0; stroke: #6e695f; stroke-width: 0.8"/>
+    </g>
+   </g>
+   <g id="PathCollection_34">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m863d3987d4" x="515.198118" y="449.498604" style="fill: #e8b04f; stroke: #6e695f; stroke-width: 0.8"/>
+    </g>
+   </g>
+   <g id="PathCollection_35">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m3989d16452" x="386.004706" y="474.824987" style="fill: #cfd3b0; stroke: #6e695f; stroke-width: 0.8"/>
+    </g>
+   </g>
+   <g id="PathCollection_36">
+    <g clip-path="url(#p4f5f8ce1df)">
+     <use xlink:href="#m863d3987d4" x="450.601412" y="500.15137" style="fill: #e8b04f; stroke: #6e695f; stroke-width: 0.8"/>
+    </g>
+   </g>
+  </g>
+  <g id="legend_1">
+   <g id="line2d_44">
+    <defs>
+     <path id="m4f0c4dd5af" d="M 0 4 
+C 1.060812 4 2.078319 3.578535 2.828427 2.828427 
+C 3.578535 2.078319 4 1.060812 4 0 
+C 4 -1.060812 3.578535 -2.078319 2.828427 -2.828427 
+C 2.078319 -3.578535 1.060812 -4 0 -4 
+C -1.060812 -4 -2.078319 -3.578535 -2.828427 -2.828427 
+C -3.578535 -2.078319 -4 -1.060812 -4 0 
+C -4 1.060812 -3.578535 2.078319 -2.828427 2.828427 
+C -2.078319 3.578535 -1.060812 4 0 4 
+z
+" style="stroke: #6e695f; stroke-width: 2"/>
+    </defs>
+    <g>
+     <use xlink:href="#m4f0c4dd5af" x="337.558" y="13.3875" style="fill: #f5f2eb; stroke: #6e695f; stroke-width: 2"/>
+    </g>
+   </g>
+   <g id="text_31">
+    <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: start; fill: #1f2124" x="352.858" y="16.3625" transform="rotate(-0 352.858 16.3625)">Inherent (before treatment)</text>
+   </g>
+   <g id="line2d_45">
+    <defs>
+     <path id="me5fb561c67" d="M 0 4 
+C 1.060812 4 2.078319 3.578535 2.828427 2.828427 
+C 3.578535 2.078319 4 1.060812 4 0 
+C 4 -1.060812 3.578535 -2.078319 2.828427 -2.828427 
+C 2.078319 -3.578535 1.060812 -4 0 -4 
+C -1.060812 -4 -2.078319 -3.578535 -2.828427 -2.828427 
+C -3.578535 -2.078319 -4 -1.060812 -4 0 
+C -4 1.060812 -3.578535 2.078319 -2.828427 2.828427 
+C -2.078319 3.578535 -1.060812 4 0 4 
+z
+" style="stroke: #6e695f"/>
+    </defs>
+    <g>
+     <use xlink:href="#me5fb561c67" x="484.3105" y="13.3875" style="fill: #6e695f; stroke: #6e695f"/>
+    </g>
+   </g>
+   <g id="text_32">
+    <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: start; fill: #1f2124" x="499.6105" y="16.3625" transform="rotate(-0 499.6105 16.3625)">Residual (after planned treatment)</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p4f5f8ce1df">
+   <rect x="321.408" y="39.2112" width="549.072" height="476.136"/>
+  </clipPath>
+ </defs>
+</svg>
+</div>
+  </section>
+
+  <section>
+    <h2><span class="num">03</span>Who owns what</h2>
+    <p class="intro">Risks per owner, split by remediation status.</p>
+    <div class="chart"><svg xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 892.8 316.8" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-08T17:36:44.570824</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 316.8 
+L 892.8 316.8 
+L 892.8 0 
+L 0 0 
+z
+" style="fill: #f5f2eb"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 241.056 304.128 
+L 870.48 304.128 
+L 870.48 44.352 
+L 241.056 44.352 
+z
+" style="fill: #f5f2eb"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 241.056 297.076937 
+L 353.453143 297.076937 
+L 353.453143 274.068206 
+L 241.056 274.068206 
+z
+" clip-path="url(#pbe229a25e7)" style="fill: #d9962a; stroke: #f5f2eb; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 241.056 259.96608 
+L 353.453143 259.96608 
+L 353.453143 236.957349 
+L 241.056 236.957349 
+z
+" clip-path="url(#pbe229a25e7)" style="fill: #5fa3de; stroke: #f5f2eb; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 241.056 222.855223 
+L 353.453143 222.855223 
+L 353.453143 199.846491 
+L 241.056 199.846491 
+z
+" clip-path="url(#pbe229a25e7)" style="fill: #5fa3de; stroke: #f5f2eb; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 353.453143 222.855223 
+L 465.850286 222.855223 
+L 465.850286 199.846491 
+L 353.453143 199.846491 
+z
+" clip-path="url(#pbe229a25e7)" style="fill: #d9962a; stroke: #f5f2eb; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 241.056 185.744366 
+L 353.453143 185.744366 
+L 353.453143 162.735634 
+L 241.056 162.735634 
+z
+" clip-path="url(#pbe229a25e7)" style="fill: #2e5aa6; stroke: #f5f2eb; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 353.453143 185.744366 
+L 465.850286 185.744366 
+L 465.850286 162.735634 
+L 353.453143 162.735634 
+z
+" clip-path="url(#pbe229a25e7)" style="fill: #d9962a; stroke: #f5f2eb; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 241.056 148.633509 
+L 353.453143 148.633509 
+L 353.453143 125.624777 
+L 241.056 125.624777 
+z
+" clip-path="url(#pbe229a25e7)" style="fill: #2e5aa6; stroke: #f5f2eb; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 353.453143 148.633509 
+L 465.850286 148.633509 
+L 465.850286 125.624777 
+L 353.453143 125.624777 
+z
+" clip-path="url(#pbe229a25e7)" style="fill: #5fa3de; stroke: #f5f2eb; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_11">
+    <path d="M 241.056 111.522651 
+L 353.453143 111.522651 
+L 353.453143 88.51392 
+L 241.056 88.51392 
+z
+" clip-path="url(#pbe229a25e7)" style="fill: #2e5aa6; stroke: #f5f2eb; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_12">
+    <path d="M 353.453143 111.522651 
+L 465.850286 111.522651 
+L 465.850286 88.51392 
+L 353.453143 88.51392 
+z
+" clip-path="url(#pbe229a25e7)" style="fill: #5fa3de; stroke: #f5f2eb; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_13">
+    <path d="M 465.850286 111.522651 
+L 803.041714 111.522651 
+L 803.041714 88.51392 
+L 465.850286 88.51392 
+z
+" clip-path="url(#pbe229a25e7)" style="fill: #d9962a; stroke: #f5f2eb; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_14">
+    <path d="M 241.056 74.411794 
+L 465.850286 74.411794 
+L 465.850286 51.403063 
+L 241.056 51.403063 
+z
+" clip-path="url(#pbe229a25e7)" style="fill: #2e5aa6; stroke: #f5f2eb; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_15">
+    <path d="M 465.850286 74.411794 
+L 578.247429 74.411794 
+L 578.247429 51.403063 
+L 465.850286 51.403063 
+z
+" clip-path="url(#pbe229a25e7)" style="fill: #5fa3de; stroke: #f5f2eb; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_16">
+    <path d="M 578.247429 74.411794 
+L 690.644571 74.411794 
+L 690.644571 51.403063 
+L 578.247429 51.403063 
+z
+" clip-path="url(#pbe229a25e7)" style="fill: #d9962a; stroke: #f5f2eb; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_17">
+    <path d="M 690.644571 74.411794 
+L 803.041714 74.411794 
+L 803.041714 51.403063 
+L 690.644571 51.403063 
+z
+" clip-path="url(#pbe229a25e7)" style="fill: #9a68c6; stroke: #f5f2eb; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="matplotlib.axis_1"/>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_1"/>
+     <g id="text_1">
+      <text style="font-size: 8.8px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="237.556" y="290.082571" transform="rotate(-0 237.556 290.082571)">Director of Human Resources</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_2"/>
+     <g id="text_2">
+      <text style="font-size: 8.8px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="237.556" y="252.971714" transform="rotate(-0 237.556 252.971714)">Head of Student Services</text>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_3"/>
+     <g id="text_3">
+      <text style="font-size: 8.8px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="237.556" y="215.860857" transform="rotate(-0 237.556 215.860857)">Data Protection Officer</text>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_4"/>
+     <g id="text_4">
+      <text style="font-size: 8.8px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="237.556" y="178.75" transform="rotate(-0 237.556 178.75)">Head of Facilities Management</text>
+     </g>
+    </g>
+    <g id="ytick_5">
+     <g id="line2d_5"/>
+     <g id="text_5">
+      <text style="font-size: 8.8px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="237.556" y="141.639143" transform="rotate(-0 237.556 141.639143)">Vice President for Research</text>
+     </g>
+    </g>
+    <g id="ytick_6">
+     <g id="line2d_6"/>
+     <g id="text_6">
+      <text style="font-size: 8.8px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="237.556" y="104.528286" transform="rotate(-0 237.556 104.528286)">CISO</text>
+     </g>
+    </g>
+    <g id="ytick_7">
+     <g id="line2d_7"/>
+     <g id="text_7">
+      <text style="font-size: 8.8px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: end; fill: #1f2124" x="237.556" y="67.417429" transform="rotate(-0 237.556 67.417429)">Head of University IT Centre (HIZ)</text>
+     </g>
+    </g>
+   </g>
+   <g id="text_8">
+    <text style="font-weight: 500; font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #1f2124" x="297.254571" y="288.760071" transform="rotate(-0 297.254571 288.760071)">1</text>
+   </g>
+   <g id="text_9">
+    <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: start; fill: #6e695f" x="366.9408" y="288.760071" transform="rotate(-0 366.9408 288.760071)">1</text>
+   </g>
+   <g id="text_10">
+    <text style="font-weight: 500; font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #1f2124" x="297.254571" y="251.649214" transform="rotate(-0 297.254571 251.649214)">1</text>
+   </g>
+   <g id="text_11">
+    <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: start; fill: #6e695f" x="366.9408" y="251.649214" transform="rotate(-0 366.9408 251.649214)">1</text>
+   </g>
+   <g id="text_12">
+    <text style="font-weight: 500; font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #1f2124" x="297.254571" y="214.538357" transform="rotate(-0 297.254571 214.538357)">1</text>
+   </g>
+   <g id="text_13">
+    <text style="font-weight: 500; font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #1f2124" x="409.651714" y="214.538357" transform="rotate(-0 409.651714 214.538357)">1</text>
+   </g>
+   <g id="text_14">
+    <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: start; fill: #6e695f" x="479.337943" y="214.538357" transform="rotate(-0 479.337943 214.538357)">2</text>
+   </g>
+   <g id="text_15">
+    <text style="font-weight: 500; font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #ffffff" x="297.254571" y="177.4275" transform="rotate(-0 297.254571 177.4275)">1</text>
+   </g>
+   <g id="text_16">
+    <text style="font-weight: 500; font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #1f2124" x="409.651714" y="177.4275" transform="rotate(-0 409.651714 177.4275)">1</text>
+   </g>
+   <g id="text_17">
+    <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: start; fill: #6e695f" x="479.337943" y="177.4275" transform="rotate(-0 479.337943 177.4275)">2</text>
+   </g>
+   <g id="text_18">
+    <text style="font-weight: 500; font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #ffffff" x="297.254571" y="140.316643" transform="rotate(-0 297.254571 140.316643)">1</text>
+   </g>
+   <g id="text_19">
+    <text style="font-weight: 500; font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #1f2124" x="409.651714" y="140.316643" transform="rotate(-0 409.651714 140.316643)">1</text>
+   </g>
+   <g id="text_20">
+    <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: start; fill: #6e695f" x="479.337943" y="140.316643" transform="rotate(-0 479.337943 140.316643)">2</text>
+   </g>
+   <g id="text_21">
+    <text style="font-weight: 500; font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #ffffff" x="297.254571" y="103.205786" transform="rotate(-0 297.254571 103.205786)">1</text>
+   </g>
+   <g id="text_22">
+    <text style="font-weight: 500; font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #1f2124" x="409.651714" y="103.205786" transform="rotate(-0 409.651714 103.205786)">1</text>
+   </g>
+   <g id="text_23">
+    <text style="font-weight: 500; font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #1f2124" x="634.446" y="103.205786" transform="rotate(-0 634.446 103.205786)">3</text>
+   </g>
+   <g id="text_24">
+    <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: start; fill: #6e695f" x="816.529371" y="103.205786" transform="rotate(-0 816.529371 103.205786)">5</text>
+   </g>
+   <g id="text_25">
+    <text style="font-weight: 500; font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #ffffff" x="353.453143" y="66.094929" transform="rotate(-0 353.453143 66.094929)">2</text>
+   </g>
+   <g id="text_26">
+    <text style="font-weight: 500; font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #1f2124" x="522.048857" y="66.094929" transform="rotate(-0 522.048857 66.094929)">1</text>
+   </g>
+   <g id="text_27">
+    <text style="font-weight: 500; font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #1f2124" x="634.446" y="66.094929" transform="rotate(-0 634.446 66.094929)">1</text>
+   </g>
+   <g id="text_28">
+    <text style="font-weight: 500; font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: middle; fill: #ffffff" x="746.843143" y="66.094929" transform="rotate(-0 746.843143 66.094929)">1</text>
+   </g>
+   <g id="text_29">
+    <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: start; fill: #6e695f" x="816.529371" y="66.094929" transform="rotate(-0 816.529371 66.094929)">5</text>
+   </g>
+  </g>
+  <g id="legend_1">
+   <g id="patch_18">
+    <path d="M 248.706 20.7205 
+L 258.056 20.7205 
+L 258.056 12.5605 
+L 248.706 12.5605 
+z
+" style="fill: #2e5aa6"/>
+   </g>
+   <g id="text_30">
+    <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: start; fill: #1f2124" x="264.856" y="19.5305" transform="rotate(-0 264.856 19.5305)">Open</text>
+   </g>
+   <g id="patch_19">
+    <path d="M 300.5985 20.7205 
+L 309.9485 20.7205 
+L 309.9485 12.5605 
+L 300.5985 12.5605 
+z
+" style="fill: #5fa3de"/>
+   </g>
+   <g id="text_31">
+    <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: start; fill: #1f2124" x="316.7485" y="19.5305" transform="rotate(-0 316.7485 19.5305)">Planned</text>
+   </g>
+   <g id="patch_20">
+    <path d="M 363.303266 20.7205 
+L 372.653266 20.7205 
+L 372.653266 12.5605 
+L 363.303266 12.5605 
+z
+" style="fill: #d9962a"/>
+   </g>
+   <g id="text_32">
+    <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: start; fill: #1f2124" x="379.453266" y="19.5305" transform="rotate(-0 379.453266 19.5305)">In progress</text>
+   </g>
+   <g id="patch_21">
+    <path d="M 438.214828 20.7205 
+L 447.564828 20.7205 
+L 447.564828 12.5605 
+L 438.214828 12.5605 
+z
+" style="fill: #9a68c6"/>
+   </g>
+   <g id="text_33">
+    <text style="font-size: 8.5px; font-family: 'IBM Plex Sans', 'DejaVu Sans'; text-anchor: start; fill: #1f2124" x="454.364828" y="19.5305" transform="rotate(-0 454.364828 19.5305)">Accepted</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pbe229a25e7">
+   <rect x="241.056" y="44.352" width="629.424" height="259.776"/>
+  </clipPath>
+ </defs>
+</svg>
+</div>
+  </section>
+
+  <section>
+    <h2><span class="num">04</span>Overdue remediations</h2>
+    <p class="intro">Open risks whose remediation due date has passed, longest overdue first.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>ID</th><th>Risk and planned remediation</th><th>Owner</th><th>Status</th>
+        <th>Due</th><th>Overdue</th></tr></thead>
+      <tbody><tr><td class='id'>R06</td><td>Unpatched servers run by institutes (shadow IT)<div class='sub'>Asset inventory for all servers on the campus network; monthly external scanning with follow-up</div></td><td>CISO</td><td>Open</td><td class='num'>31 Jul 2026</td><td class='num late'>69 days</td></tr><tr><td class='id'>R04</td><td>Loss or theft of laptops and mobile devices<div class='sub'>Mandatory full-disk encryption and device management for university-owned laptops</div></td><td>CISO</td><td>In progress</td><td class='num'>31 Aug 2026</td><td class='num late'>38 days</td></tr><tr><td class='id'>R15</td><td>Attacks detected too late<div class='sub'>Central log platform for core systems; written incident response plan with on-call list</div></td><td>CISO</td><td>In progress</td><td class='num'>15 Sep 2026</td><td class='num late'>23 days</td></tr><tr><td class='id'>R02</td><td>Phishing and theft of staff or student credentials<div class='sub'>Roll out MFA for all staff accounts; yearly phishing simulation and e-learning</div></td><td>CISO</td><td>In progress</td><td class='num'>30 Sep 2026</td><td class='num late'>8 days</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <details>
+      <summary>All 18 risks as a table</summary>
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Risk</th><th>Owner</th><th>Inherent</th><th>Residual</th>
+          <th>Status</th><th>Due</th></tr></thead>
+        <tbody><tr><td class='id'>R01</td><td>Ransomware on central IT infrastructure</td><td>Head of University IT Centre (HIZ)</td><td><span class='chip' style='--c:#8B1E2D'>20 Critical</span></td><td><span class='chip' style='--c:#E8B04F'>8 Medium</span></td><td>In progress</td><td class='num'>31 Dec 2026</td></tr><tr><td class='id'>R06</td><td>Unpatched servers run by institutes (shadow IT)</td><td>CISO</td><td><span class='chip' style='--c:#8B1E2D'>16 Critical</span></td><td><span class='chip' style='--c:#E8B04F'>6 Medium</span></td><td>Open</td><td class='num'>31 Jul 2026</td></tr><tr><td class='id'>R15</td><td>Attacks detected too late</td><td>CISO</td><td><span class='chip' style='--c:#8B1E2D'>16 Critical</span></td><td><span class='chip' style='--c:#E8B04F'>6 Medium</span></td><td>In progress</td><td class='num'>15 Sep 2026</td></tr><tr><td class='id'>R02</td><td>Phishing and theft of staff or student credentials</td><td>CISO</td><td><span class='chip' style='--c:#8B1E2D'>15 Critical</span></td><td><span class='chip' style='--c:#E8B04F'>6 Medium</span></td><td>In progress</td><td class='num'>30 Sep 2026</td></tr><tr><td class='id'>R03</td><td>Leak of sensitive research data</td><td>Vice President for Research</td><td><span class='chip' style='--c:#8B1E2D'>15 Critical</span></td><td><span class='chip' style='--c:#E8B04F'>8 Medium</span></td><td>Planned</td><td class='num'>31 Mar 2027</td></tr><tr><td class='id'>R04</td><td>Loss or theft of laptops and mobile devices</td><td>CISO</td><td><span class='chip' style='--c:#CB6234'>12 High</span></td><td><span class='chip' style='--c:#CFD3B0'>4 Low</span></td><td>In progress</td><td class='num'>31 Aug 2026</td></tr><tr><td class='id'>R09</td><td>Accounts not removed after people leave</td><td>Director of Human Resources</td><td><span class='chip' style='--c:#CB6234'>12 High</span></td><td><span class='chip' style='--c:#CFD3B0'>4 Low</span></td><td>In progress</td><td class='num'>30 Nov 2026</td></tr><tr><td class='id'>R10</td><td>Personal data exposed through misconfigured file sharing</td><td>Data Protection Officer</td><td><span class='chip' style='--c:#CB6234'>12 High</span></td><td><span class='chip' style='--c:#E8B04F'>6 Medium</span></td><td>Planned</td><td class='num'>31 Jan 2027</td></tr><tr><td class='id'>R11</td><td>Espionage targeting research and knowledge transfer</td><td>Vice President for Research</td><td><span class='chip' style='--c:#CB6234'>12 High</span></td><td><span class='chip' style='--c:#E8B04F'>6 Medium</span></td><td>Open</td><td class='num'>30 Jun 2027</td></tr><tr><td class='id'>R16</td><td>Insecure lab equipment and building systems on the campus network</td><td>Head of Facilities Management</td><td><span class='chip' style='--c:#CB6234'>12 High</span></td><td><span class='chip' style='--c:#E8B04F'>6 Medium</span></td><td>Open</td><td class='num'>30 Jun 2027</td></tr><tr><td class='id'>R18</td><td>Confidential data entered into public AI tools</td><td>Data Protection Officer</td><td><span class='chip' style='--c:#CB6234'>12 High</span></td><td><span class='chip' style='--c:#CFD3B0'>4 Low</span></td><td>In progress</td><td class='num'>31 Dec 2026</td></tr><tr><td class='id'>R08</td><td>Misuse of privileged administrator accounts</td><td>Head of University IT Centre (HIZ)</td><td><span class='chip' style='--c:#CB6234'>10 High</span></td><td><span class='chip' style='--c:#CFD3B0'>4 Low</span></td><td>Open</td><td class='num'>31 Mar 2027</td></tr><tr><td class='id'>R12</td><td>Fire, water or power failure in the data centre</td><td>Head of Facilities Management</td><td><span class='chip' style='--c:#CB6234'>10 High</span></td><td><span class='chip' style='--c:#CFD3B0'>4 Low</span></td><td>In progress</td><td class='num'>31 Oct 2026</td></tr><tr><td class='id'>R13</td><td>Denial-of-service attack on website and network</td><td>Head of University IT Centre (HIZ)</td><td><span class='chip' style='--c:#E8B04F'>9 Medium</span></td><td><span class='chip' style='--c:#E8B04F'>9 Medium</span></td><td>Accepted</td><td class='num'>30 Jun 2026</td></tr><tr><td class='id'>R14</td><td>Insecure software developed in-house</td><td>CISO</td><td><span class='chip' style='--c:#E8B04F'>9 Medium</span></td><td><span class='chip' style='--c:#CFD3B0'>4 Low</span></td><td>Planned</td><td class='num'>30 Apr 2027</td></tr><tr><td class='id'>R17</td><td>Loss of key IT staff and knowledge</td><td>Head of University IT Centre (HIZ)</td><td><span class='chip' style='--c:#E8B04F'>9 Medium</span></td><td><span class='chip' style='--c:#CFD3B0'>4 Low</span></td><td>Planned</td><td class='num'>31 Mar 2027</td></tr><tr><td class='id'>R05</td><td>Outage of a critical IT or network supplier</td><td>Head of University IT Centre (HIZ)</td><td><span class='chip' style='--c:#E8B04F'>8 Medium</span></td><td><span class='chip' style='--c:#E8B04F'>6 Medium</span></td><td>Open</td><td class='num'>31 Jan 2027</td></tr><tr><td class='id'>R07</td><td>Campus management system failure during enrolment or exam registration</td><td>Head of Student Services</td><td><span class='chip' style='--c:#E8B04F'>8 Medium</span></td><td><span class='chip' style='--c:#CFD3B0'>3 Low</span></td><td>Planned</td><td class='num'>28 Feb 2027</td></tr></tbody>
+      </table></div>
+    </details>
+  </section>
+
+  <footer>
+    <span>Source: saarland-university-risk-register.xlsx · generated 08 Oct 2026</span>
+    <span>Portfolio exercise. Not an official document of Saarland University.</span>
+  </footer>
+</main>
+</body>
+</html>
