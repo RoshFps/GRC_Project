@@ -1,4 +1,4 @@
-# ISMS & BCM Starter Kit: Saarland University
+# ISMS & BCM Portfolio: Saarland University
 
 A portfolio project in governance, risk and compliance (GRC). It builds the core documents of an information security management system (ISO/IEC 27001:2022) and business continuity management, using Saarland University as the example organisation.
 
