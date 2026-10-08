@@ -13,7 +13,7 @@ I picked my own university because it is an organisation I know from the inside 
 | Risk register (18 risks, likelihood × impact, owner, ISO 27001 Annex A controls, remediation tracking, KPI summary and heatmap) | Done | `risk-register/` |
 | Statement of Applicability (93 Annex A controls, applicability, justification, implementation status, linked risks) | Done | `soa/` |
 | Business Impact Analysis, one-page continuity plan and tabletop exercise for exam registration and grade recording | Done | `bcm/` |
-| Python heatmap and KPI dashboard reading the register | Planned | |
+| Risk heatmap and KPI dashboard (Python, reads the register; static HTML page plus PNG charts) | Done | `dashboard/` |
 
 ## Risk register
 
@@ -34,6 +34,27 @@ I picked my own university because it is an organisation I know from the inside 
 - `bcm/continuity-plan.md`: one-page plan: when to activate, who does what, the paper fallback, deadline extensions and the return to normal.
 - `bcm/tabletop-exercise.md`: "Deadline Day", a two-hour exercise where LSF is hit by ransomware on the last two days of the winter registration window, with six injects, expected responses and how to score them.
 - `bcm/sources.md`: public facts (LSF, iTAN, semester dates) and standards (ISO 22301, BSI-Standard 200-4) behind the documents.
+
+## Risk dashboard
+
+`dashboard/risk_dashboard.py` reads the risk register and builds a one-page report on the current risk position:
+
+- KPIs: risks on the register, open risks, overdue remediations, high or critical risks before and after treatment, total score reduction.
+- A 5×5 heatmap of inherent and residual risk side by side.
+- Inherent against residual score for every risk, with the risk appetite line.
+- Risks per owner, split by remediation status.
+- A table of overdue remediations and the full register.
+
+Outputs in `dashboard/output/`: `risk-dashboard.html` (a single page with the charts inline; open it in a browser) and `heatmap.png`, `movement.png`, `owners.png` for slides.
+
+```
+pip install openpyxl matplotlib
+cd dashboard
+python3 risk_dashboard.py ../risk-register/saarland-university-risk-register.xlsx
+python3 risk_dashboard.py ../risk-register/saarland-university-risk-register.xlsx --as-of 2026-10-08 --out output
+```
+
+`--as-of` sets the reporting date used for overdue checks (default: today). Scores, ratings and overdue flags are recalculated from likelihood, impact, status and due date, and the rating thresholds come from the Scoring Method sheet, so editing the register and re-running is enough. On first run the script downloads Source Serif 4 and IBM Plex from Google Fonts into `dashboard/.fonts/`; offline it falls back to the default font.
 
 ## How to use it
 
